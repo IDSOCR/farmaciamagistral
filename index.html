@@ -1,0 +1,224 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Registro de Ventas</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.datatables.net/1.13.6/css/jquery.dataTables.min.css">
+    <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+    <script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
+</head>
+<body class="bg-light">
+
+<div class="container py-4">
+    <h2 class="text-center mb-4">Registro de Ventas - Magistrales</h2>
+
+ <!-- Filtros por año, mes y estado -->
+<div class="mb-3 d-flex justify-content-between align-items-center">
+    <a href="/admin" class="btn btn-secondary">Administrar Listas</a>
+
+    <form method="get" class="d-flex align-items-center gap-2">
+        <select name="anio" class="form-select">
+            <option value="">Año</option>
+            {% for a in anios_disponibles %}
+                <option value="{{ a }}" {% if a == anio %}selected{% endif %}>{{ a }}</option>
+            {% endfor %}
+        </select>
+
+        <select name="mes" class="form-select">
+            <option value="">Mes</option>
+            {% for m in range(1, 13) %}
+                <option value="{{ m }}" {% if m == mes|int %}selected{% endif %}>{{ m }}</option>
+            {% endfor %}
+        </select>
+
+        <select name="estado" class="form-select">
+            <option value="">Estado</option>
+            {% for e in estados %}
+                <option value="{{ e }}" {% if e == estado_filtro %}selected{% endif %}>{{ e }}</option>
+            {% endfor %}
+        </select>
+
+        <select name="farmacia" class="form-select">
+            <option value="">Farmacia</option>
+            {% for f in farmacias %}
+                <option value="{{ f }}" {% if f == farmacia_filtro %}selected{% endif %}>{{ f }}</option>
+            {% endfor %}
+        </select>
+
+        <button type="submit" class="btn btn-primary">Filtrar</button>
+        <a href="/" class="btn btn-outline-secondary">Limpiar</a>
+    </form>
+</div>
+
+
+    <!-- Formulario -->
+    <form action="/registrar" method="POST" class="card shadow p-4 mb-4" id="ventaForm">
+        <div class="row g-3">
+            <div class="col-md-3">
+                <label class="form-label">Farmacia</label>
+                <select name="farmacia" class="form-select" required>
+                    {% for f in farmacias %}
+                        <option value="{{ f }}">{{ f }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="col-md-2">
+                <label class="form-label">Orden</label>
+                <input type="text" name="orden" class="form-control" required>
+            </div>
+            <div class="col-md-4">
+                <label class="form-label">Descripción</label>
+                <input type="text" name="descripcion" class="form-control" required>
+            </div>
+            <div class="col-md-3">
+                <label class="form-label">Estado</label>
+                <select name="estado" class="form-select" required>
+                    {% for e in estados %}
+                        <option value="{{ e }}">{{ e }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <div class="col-md-3">
+                <label class="form-label">Monto Farmacia</label>
+                <input type="number" step="0.01" name="monto_farmacia" id="monto_farmacia" class="form-control" required>
+            </div>
+
+            <div class="col-md-2">
+                <label class="form-label">Monto Sugerido 20%</label>
+                <input type="text" class="form-control" id="monto_20" readonly>
+            </div>
+
+            <div class="col-md-3">
+                <label class="form-label">Venta Final</label>
+                <input type="number" step="0.01" name="venta_final" id="venta_final" class="form-control" required>
+            </div>
+
+            <div class="col-md-2">
+                <label class="form-label">IVA 2%</label>
+                <input type="text" class="form-control" id="iva_2" readonly>
+            </div>
+            <div class="col-md-2">
+                <label class="form-label">Comisión 50%</label>
+                <input type="text" class="form-control" id="comision_50" readonly>
+            </div>
+        </div>
+
+        <div class="mt-4 d-flex justify-content-between">
+            <button type="submit" class="btn btn-success">Registrar Venta</button>
+            <a href="/descargar" class="btn btn-outline-primary">Descargar Excel</a>
+        </div>
+    </form>
+
+    <!-- Tabla -->
+    <div class="table-responsive card shadow p-3">
+        <table class="table table-bordered table-striped table-hover">
+            <thead class="table-dark">
+                <tr>
+                    <th>Fecha</th>
+                    <th>Farmacia</th>
+                    <th>Orden</th>
+                    <th>Descripción</th>
+                    <th>Estado</th>
+                    <th>Monto Farmacia</th>
+                    <th>Venta Final</th>
+                    <th>20%</th>
+                    <th>IVA 2%</th>
+                    <th>Comisión 50%</th>
+                    <th>Acción</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for venta in ventas %}
+                <tr>
+                    <td>{{ venta[10] }}</td>
+                    <td>{{ venta[1] }}</td>
+                    <td>{{ venta[2] }}</td>
+                    <td>{{ venta[3] }}</td>
+                    <td>{{ venta[9] }}</td>
+                    <td>₡{{ "{:,.2f}".format(venta[4]) }}</td>
+                    <td>₡{{ "{:,.2f}".format(venta[5]) }}</td>
+                    <td>₡{{ "{:,.2f}".format(venta[6]) }}</td>
+                    <td>₡{{ "{:,.2f}".format(venta[7]) }}</td>
+                    <td>₡{{ "{:,.2f}".format(venta[8]) }}</td>
+                    <td><a href="/editar/{{ venta[0] }}" class="btn btn-sm btn-warning">Editar</a></td>
+                </tr>
+                {% endfor %}
+            </tbody>
+            <tfoot>
+                <tr>
+                    <th colspan="5" class="text-end">Totales:</th>
+                    <th></th>
+                    <th></th>
+                    <th></th>
+                    <th></th>
+                    <th></th>
+                    <th></th>
+                </tr>
+            </tfoot>
+        </table>
+    </div>
+</div>
+
+<!-- Scripts para cálculos -->
+<script>
+function formatNumber(num) {
+    return "₡" + num.toLocaleString("es-CR", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+}
+function calcularValores() {
+    let monto = parseFloat(document.getElementById('monto_farmacia').value) || 0;
+    let venta = parseFloat(document.getElementById('venta_final').value) || 0;
+    let monto20 = monto + (monto * 0.20);
+    let iva = monto * 0.02;
+    let comision = ((venta - monto) / 2) - iva;
+    document.getElementById('monto_20').value = formatNumber(monto20);
+    document.getElementById('iva_2').value = formatNumber(iva);
+    document.getElementById('comision_50').value = formatNumber(comision);
+}
+document.getElementById('monto_farmacia').addEventListener('input', calcularValores);
+document.getElementById('venta_final').addEventListener('input', calcularValores);
+</script>
+
+<!-- DataTables con totales -->
+<script>
+$(document).ready(function() {
+    let table = $('.table').DataTable({
+        responsive: true,
+        paging: true,
+        language: {
+            url: '//cdn.datatables.net/plug-ins/1.13.6/i18n/es-CR.json'
+        },
+        footerCallback: function(row, data, start, end, display) {
+            let api = this.api();
+            let parse = function(i) {
+                return typeof i === 'string'
+                    ? parseFloat(i.replace(/[₡,]/g, '')) || 0
+                    : typeof i === 'number'
+                    ? i
+                    : 0;
+            };
+            let totalIvaMonto = 0;
+            let totalComision = 0;
+
+            api.rows({ page: 'current' }).every(function() {
+                let data = this.data();
+                totalIvaMonto += parse(data[5]) + parse(data[8]);
+                totalComision += parse(data[9]);
+            });
+
+            $(api.column(5).footer()).html('₡' + totalIvaMonto.toLocaleString("es-CR", {minimumFractionDigits: 2}));
+            $(api.column(9).footer()).html('₡' + totalComision.toLocaleString("es-CR", {minimumFractionDigits: 2}));
+        }
+    });
+});
+</script>
+
+</body>
+</html>
+
+
+
+
+
