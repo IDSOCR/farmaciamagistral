@@ -124,7 +124,7 @@ def registrar():
     monto_farmacia = float(request.form['monto_farmacia'])
     venta_final = float(request.form['venta_final'])
 
-    monto_20 = monto_farmacia * 0.20
+    monto_20 = monto_farmacia * 0.20 + monto_farmacia
     iva_2 = monto_farmacia * 0.02
     comision_50 = ((venta_final - monto_farmacia) / 2) - iva_2
 
